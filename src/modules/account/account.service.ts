@@ -1,26 +1,32 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAccountDto } from './dto/create-account.dto';
-import { UpdateAccountDto } from './dto/update-account.dto';
+import { Account } from './entities/account.entity';
 
 @Injectable()
 export class AccountService {
-  create(createAccountDto: CreateAccountDto) {
-    return 'This action adds a new account';
+  private accounts: Array<Account> = [];
+
+  create(newAccount: CreateAccountDto) {
+    console.log(newAccount);
+    if (
+      this.findAll().find(
+        (account) => account.document == newAccount.document,
+      )
+    ) {
+      return 'conta ja existe';
+    }
+    if (
+      !!newAccount.name ||
+      !!newAccount.document ||
+      !!newAccount.available_value
+    ){
+      return 'favor preencher todos os valores';
+    }
+      return newAccount;
   }
 
   findAll() {
-    return `This action returns all account`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} account`;
-  }
-
-  update(id: number, updateAccountDto: UpdateAccountDto) {
-    return `This action updates a #${id} account`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} account`;
+    const accounts: Account[] = [];
+    return accounts;
   }
 }

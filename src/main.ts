@@ -8,7 +8,8 @@ async function bootstrap() {
     .setTitle('Desafio Conta Digital')
     .setDescription('Desafio UME')
     .setVersion('1.0')
-    .addTag('conta-digital')
+    .addTag('account')
+    .addTag('transaction')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
