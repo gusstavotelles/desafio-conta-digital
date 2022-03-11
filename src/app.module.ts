@@ -6,6 +6,7 @@ import { TransactionModule } from './modules/transaction/transaction.module';
 
 @Module({
   imports: [AccountModule,TransactionModule],
+  exports:[AccountModule,TransactionModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Inject } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -13,7 +8,9 @@ import { Account, IAccount } from './entities/account.entity';
 @Controller('account')
 @ApiTags('account')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(
+     private readonly accountService: AccountService,
+  ) {}
 
   @Post()
   @ApiOkResponse({ description: 'Account Created' })
