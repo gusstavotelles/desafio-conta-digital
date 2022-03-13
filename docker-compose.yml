@@ -3,16 +3,16 @@ version: "3.7"
 
 services:
   backend:
-    container_name: myapp_backend
+    container_name: desafio-conta-digital_backend
     restart: always
     build: .
     environment:
       - APP_ENV=development
       - APP_PORT=9000
     volumes:
-      - ./src:/var/www/myapp/src
-      - ./test:/var/www/myapp/test
-    working_dir: /var/www/myapp
+      - ./src:/var/www/desafio-conta-digital/src
+      - ./test:/var/www/desafio-conta-digital/test
+    working_dir: /var/www/desafio-conta-digital
     ports:
       - "9001:9000"
     links:
@@ -22,32 +22,32 @@ services:
       - mysql
       - redis
   mysql: # Example Service
-    container_name: myapp_mysql
+    container_name: desafio-conta-digital_mysql
     restart: always
     image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=myapp
-      - MYSQL_PASSWORD=myapp
-      - MYSQL_DATABASE=myapp_docker
+      - MYSQL_USER=desafio-conta-digital
+      - MYSQL_PASSWORD=desafio-conta-digital
+      - MYSQL_DATABASE=desafio-conta-digital_docker
     ports:
     - "3308:3306"
     volumes:
-    - myapp_mysql_data:/var/lib/mysql
+    - desafio-conta-digital_mysql_data:/var/lib/mysql
   redis: # Example Service
-    container_name: myapp_redis
+    container_name: desafio-conta-digital_redis
     restart: always
     image: redis:6.0-alpine
     expose:
       - "6379"
     volumes:
-      - myapp_redis_data:/data
+      - desafio-conta-digital_redis_data:/data
 
 volumes:
-  myapp_mysql_data:
-  myapp_redis_data:
+  desafio-conta-digital_mysql_data:
+  desafio-conta-digital_redis_data:
 
 networks:
   default:
     external:
-      name: myapp
+      name: desafio-conta-digital
