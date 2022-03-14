@@ -1,4 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AccountService } from '../account/account.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
@@ -7,7 +9,9 @@ import * as moment from 'moment';
 @Injectable()
 export class TransactionService {
   constructor(
-     private readonly accountService: AccountService,
+    @InjectRepository(Transaction)
+    private bookRepository: Repository<Transaction>,
+    private readonly accountService: AccountService,
   ) {}
 
   private transactions: Array<Transaction> = [];
@@ -27,9 +31,11 @@ export class TransactionService {
         this.transactions.push(newTransaction);
         return newTransaction;
       } else {
-        console.log(newTransaction.value +
-          ' is higher than current available value ($' +
-          sender.available_value )
+        console.log(
+          newTransaction.value +
+            ' is higher than current available value ($' +
+            sender.available_value,
+        );
         return (
           newTransaction.value +
           ' is higher than current available value ($' +
@@ -38,7 +44,7 @@ export class TransactionService {
         );
       }
     } else {
-      console.log('sender: '+sender)
+      console.log('sender: ' + sender);
       console.log('sender: ' + sender);
       return 'One or more account(s) are not in the system';
     }

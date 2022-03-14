@@ -27,8 +27,8 @@ services:
     image: mysql:5.7
     environment:
       - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_USER=desafio-conta-digital
-      - MYSQL_PASSWORD=desafio-conta-digital
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=password
       - MYSQL_DATABASE=desafio-conta-digital_docker
     ports:
     - "3308:3306"
