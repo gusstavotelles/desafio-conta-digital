@@ -10,25 +10,26 @@ import * as moment from 'moment';
 export class TransactionService {
   constructor(
     @InjectRepository(Transaction)
-    private bookRepository: Repository<Transaction>,
+    private transactionRepository: Repository<Transaction>,
     private readonly accountService: AccountService,
   ) {}
 
   private transactions: Array<Transaction> = [];
 
-  create(newTransaction: CreateTransactionDto) {
-    const receiver = AccountService.accounts.find(
-      (account) => account.document == newTransaction.receiver_document,
+  async create(newTransaction: CreateTransactionDto) {
+    const receiver = await this.accountService.findOne(
+      newTransaction.receiver_document,
     );
-    const sender = AccountService.accounts.find(
-      (account) => account.document == newTransaction.sender_document,
+    const sender = await this.accountService.findOne(
+      newTransaction.sender_document,
     );
 
     if (receiver && sender) {
       if (newTransaction.value <= sender.available_value) {
         newTransaction.id = (this.transactions.length + 1).toString();
         newTransaction.date_time = moment().format();
-        this.transactions.push(newTransaction);
+
+        this.transactionRepository.save(newTransaction);
         return newTransaction;
       } else {
         console.log(
@@ -50,7 +51,14 @@ export class TransactionService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} transaction`;
+  findAll(): Promise<Transaction[]> {
+    return this.transactionRepository.find();
+  }
+
+  async findOne(sender_document: string) {
+    const transaction = await this.transactionRepository.findOne({
+      where: { email: 'this@mailisnotindatabase.de' },
+    });
+    return this.transactionRepository.findOne(sender_document);
   }
 }

@@ -1,7 +1,16 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Res,
+  HttpStatus,
+} from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { Transaction } from './entities/transaction.entity';
 
 @Controller('transaction')
 @ApiTags('transaction')
@@ -9,12 +18,36 @@ export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Post()
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionService.create(createTransactionDto);
+  async create(
+    @Res() response,
+    @Body() createTransactionDto: CreateTransactionDto,
+  ) {
+    const newTransaction = await this.transactionService.create(
+      createTransactionDto,
+    );
+    return newTransaction;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.transactionService.findOne(+id);
+  @Get()
+  @ApiOkResponse({
+    description: 'Accounts Created',
+    type: Transaction,
+    isArray: true,
+  })
+  async findAll() {
+    const accounts = await this.transactionService.findAll();
+    // return response.status(HttpStatus.OK).json({
+    //   accounts,
+    // });
+    return accounts;
+  }
+
+  @Get(':sender_document')
+  async findOne(
+    @Res() response,
+    @Param('sender_document') sender_document: string,
+  ): Promise<any> {
+    const transaction = await this.transactionService.findOne(sender_document);
+    return transaction;
   }
 }

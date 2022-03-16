@@ -9,6 +9,7 @@ export interface IAccount {
 @Entity()
 export class Account implements IAccount {
   @ApiProperty()
+  @PrimaryGeneratedColumn()
   public id: string;
   @ApiProperty()
   @Column()
@@ -20,9 +21,5 @@ export class Account implements IAccount {
   @Column()
   public available_value: number;
 
-  constructor(obj: IAccount) {
-    Object.entries(obj).forEach(([key, value]) =>
-      Object.assign(this, { [key]: value }),
-    );
-  }
+
 }
