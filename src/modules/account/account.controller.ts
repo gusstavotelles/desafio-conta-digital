@@ -22,15 +22,12 @@ export class AccountController {
   @ApiOkResponse({ description: 'Account Created' })
   async create(@Body() createAccountDto: CreateAccountDto) {
     const newAccount = await this.accountService.create(createAccountDto);
-    // return response.status(HttpStatus.CREATED).json({
-    //   newAccount,
-    // });
     return newAccount;
   }
 
   @Get()
   @ApiOkResponse({
-    description: 'Accounts Created',
+    description: 'Get Accounts SuccessfulAccounts Created',
     type: Account,
     isArray: true,
   })

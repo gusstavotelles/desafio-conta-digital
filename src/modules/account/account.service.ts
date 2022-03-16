@@ -10,27 +10,27 @@ export class AccountService {
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
   ) {}
+  private invalidDataMessage =
+    'Dados inválidos: um dos campos obrigatórios (name, document , available-value) não foi fornecido na operação ou está em branco.';
+  private duplicateMessage =
+    'Conta já inicializada: já existe uma conta associada ao número de documento informado;';
 
-  static accounts: Array<Account> = [];
 
-  create(newAccount: CreateAccountDto) {
-    // if (
-    //   this.findAll().find((account) => account.document == newAccount.document)
-    // ) {
-    //   return 'conta ja existe';
-    // }
-    // if (
-    //   !newAccount.name ||
-    //   !newAccount.document ||
-    //   !newAccount.available_value
-    // ) {
-    //   return 'favor preencher todos os valores';
-    // }
-    // newAccount.id = (AccountService.accounts.length + 1).toString();
-    // AccountService.accounts.push(new Account(newAccount));
-    this.accountRepository.save(newAccount);
-
-    return newAccount;
+  async create(newAccount: CreateAccountDto) {
+    return this.findAll().then(async (accounts) => {
+      if (accounts.some((acc) => acc.document == newAccount.document)) {
+        return this.duplicateMessage;
+      }
+      if (
+        !newAccount.name ||
+        !newAccount.document ||
+        !newAccount.available_value
+      ) {
+        return this.invalidDataMessage;
+      }
+      const result = await this.accountRepository.save(newAccount);
+      return result;
+    });
   }
 
   async findAll(): Promise<Account[]> {

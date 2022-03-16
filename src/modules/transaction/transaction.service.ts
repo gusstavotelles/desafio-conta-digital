@@ -14,41 +14,34 @@ export class TransactionService {
     private readonly accountService: AccountService,
   ) {}
 
-  private transactions: Array<Transaction> = [];
+  private noAccountMessage =
+    'Conta não inicializada: não existe uma conta associada ao documento presente na operação';
 
   async create(newTransaction: CreateTransactionDto) {
-    const receiver = await this.accountService.findOne(
-      newTransaction.receiver_document,
-    );
-    const sender = await this.accountService.findOne(
-      newTransaction.sender_document,
-    );
-
-    if (receiver && sender) {
-      if (newTransaction.value <= sender.available_value) {
-        newTransaction.id = (this.transactions.length + 1).toString();
-        newTransaction.date_time = moment().format();
-
-        this.transactionRepository.save(newTransaction);
-        return newTransaction;
-      } else {
-        console.log(
-          newTransaction.value +
+    return this.accountService.findAll().then(async (accounts) => {
+      const sender = accounts.find(
+        (acc) => acc.document == newTransaction.sender_document,
+      );
+      const receiver = accounts.find(
+        (acc) => acc.document == newTransaction.receiver_document,
+      );
+      if (receiver && sender) {
+        if (newTransaction.value <= sender.available_value) {
+          newTransaction.date_time = moment().format();
+          const result = await this.transactionRepository.save(newTransaction);
+          return result;
+        } else {
+          return (
+            newTransaction.value +
             ' is higher than current available value ($' +
-            sender.available_value,
-        );
-        return (
-          newTransaction.value +
-          ' is higher than current available value ($' +
-          sender.available_value +
-          ').'
-        );
+            sender.available_value +
+            ').'
+          );
+        }
+      } else {
+        return this.noAccountMessage;
       }
-    } else {
-      console.log('sender: ' + sender);
-      console.log('sender: ' + sender);
-      return 'One or more account(s) are not in the system';
-    }
+    });
   }
 
   findAll(): Promise<Transaction[]> {

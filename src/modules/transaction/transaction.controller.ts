@@ -18,10 +18,8 @@ export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Post()
-  async create(
-    @Res() response,
-    @Body() createTransactionDto: CreateTransactionDto,
-  ) {
+  @ApiOkResponse({ description: 'Transaction done' })
+  async create(@Body() createTransactionDto: CreateTransactionDto) {
     const newTransaction = await this.transactionService.create(
       createTransactionDto,
     );
