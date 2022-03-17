@@ -3,7 +3,7 @@
 
 * Para a Realização do desafio a stack escolhida foi o NestJS, por ser um dos frameworks utilizados na empresa e pela facilidade de estabelecimento e execução, além da familiaridade com TypeScript.
 
-* Foi clonado um repositório template de projeto em NestJS
+* Foi clonado um repositório template de projeto em NestJS 
 * as estruturas foram criadas utilizando o comando automatizado nest generate resource, já criando cada modulo separadamente com seu Controller, Service e Arquivos .spec para testes unitáriosexecutado. Exemplo:
 ``` 
  $ nest generate resource account

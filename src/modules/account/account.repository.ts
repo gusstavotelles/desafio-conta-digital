@@ -21,6 +21,6 @@ export class AccountRepository {
   }
 
   async findOne(document: string) {
-    return this.accountRepository.findOne(document);
+    return this.accountRepository.findOne({ where: { document: document } });
   }
 }
