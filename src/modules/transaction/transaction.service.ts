@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AccountService } from '../account/account.service';
@@ -7,6 +13,7 @@ import { Transaction } from './entities/transaction.entity';
 import * as moment from 'moment';
 import { TransactionRepository } from './transaction.repository';
 import { AccountRepository } from '../account/account.repository';
+import { Account } from '../account/entities/account.entity';
 
 @Injectable()
 export class TransactionService {
@@ -20,71 +27,69 @@ export class TransactionService {
     'Conta não inicializada: não existe uma conta associada ao documento presente na operação';
 
   async create(newTransaction: CreateTransactionDto) {
-    return this.accountService.findAll().then(async (accounts) => {
-      try {
-        const sender = accounts.find(
-          (acc) => acc.document == newTransaction.sender_document,
+    const sender = await this.accountService.findOne(
+      newTransaction.sender_document,
+    );
+    if (!sender) throw new NotFoundException(this.noAccountMessage);
+
+    const receiver = await this.accountService.findOne(
+      newTransaction.receiver_document,
+    );
+    if (!receiver) new NotFoundException(this.noAccountMessage);
+
+    if (newTransaction.value > sender.available_value)
+      throw new HttpException(
+        newTransaction.value +
+          ' is higher than current available value ($' +
+          sender.available_value +
+          ').',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    newTransaction.date_time = moment().format();
+    const isDuplicate = await this.checkDuplicate(newTransaction);
+    if (isDuplicate) {
+      throw new HttpException(
+        {
+          sender: sender,
+          receiver: receiver,
+          transaction: newTransaction,
+          message: 'Duplicate Operation, try again in 2 minutes.',
+        },
+        HttpStatus.CONFLICT,
+      );
+    }
+    try {
+      const result = await this.transactionRepository.create(newTransaction);
+      if (!result) {
+        throw new HttpException(
+          'Failed Operation',
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
-        const receiver = accounts.find(
-          (acc) => acc.document == newTransaction.receiver_document,
-        );
-        if (receiver && sender) {
-          if (newTransaction.value <= sender.available_value) {
-            newTransaction.date_time = moment().format();
-
-            if (await !this.checkDuplicate(newTransaction)) {
-              throw new HttpException(
-                {
-                  sender: sender,
-                  receiver: receiver,
-                  transaction: newTransaction,
-                  message: 'Duplicate Operation, try again in 2 minutes.',
-                },
-                HttpStatus.CONFLICT,
-              );
-            }
-
-            const result = await this.transactionRepository.create(
-              newTransaction,
-            );
-
-            if (result) {
-              sender.available_value -= newTransaction.value;
-              await this.accountRepository.insertUpdate(sender);
-
-              receiver.available_value += newTransaction.value;
-              await this.accountRepository.insertUpdate(receiver);
-              result.available_value = sender.available_value;
-              return result;
-            } else {
-              throw new HttpException(
-                'Failed Operation',
-                HttpStatus.INTERNAL_SERVER_ERROR,
-              );
-            }
-          } else {
-            throw new HttpException(
-              newTransaction.value +
-                ' is higher than current available value ($' +
-                sender.available_value +
-                ').',
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-        } else {
-          throw new HttpException(
-            this.noAccountMessage,
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-      } catch (err) {
-        return err;
+      } else {
+        return this.updateAccountsValue(result, sender, receiver);
       }
-    });
+    } catch (err) {
+      return err;
+    }
   }
 
   async findByAccount(document: string) {
     return this.transactionRepository.findByAccount(document);
+  }
+
+  private async updateAccountsValue(
+    transaction: any,
+    sender: Account,
+    receiver: Account,
+  ) {
+    sender.available_value -= transaction.value;
+    await this.accountRepository.insertUpdate(sender);
+
+    receiver.available_value += transaction.value;
+    await this.accountRepository.insertUpdate(receiver);
+    transaction.available_value = sender.available_value;
+    return transaction;
   }
 
   private async checkDuplicate(

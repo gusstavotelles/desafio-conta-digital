@@ -13,21 +13,19 @@ export class AccountService {
     'Conta já inicializada: já existe uma conta associada ao número de documento informado;';
 
   async create(newAccount: CreateAccountDto) {
-    return this.findAll().then(async (accounts) => {
-      if (accounts.some((acc) => acc.document == newAccount.document)) {
-        throw new HttpException(this.duplicateMessage, HttpStatus.CONFLICT);
-      }
-      if (
-        !newAccount.name ||
-        !newAccount.document ||
-        !newAccount.available_value
-      ) {
-        // return this.invalidDataMessage;
-        throw new HttpException(this.invalidDataMessage, HttpStatus.CONFLICT);
-      }
-      const result = await this.accountRepository.insertUpdate(newAccount);
-      return result;
-    });
+    const acc = await this.accountRepository.findOne(newAccount.document);
+    if (acc) {
+      throw new HttpException(this.duplicateMessage, HttpStatus.CONFLICT);
+    }
+    if (
+      !newAccount.name ||
+      !newAccount.document ||
+      !newAccount.available_value
+    ) {
+      throw new HttpException(this.invalidDataMessage, HttpStatus.CONFLICT);
+    }
+    const result = await this.accountRepository.insertUpdate(newAccount);
+    return result;
   }
 
   async findAll(): Promise<Account[]> {
