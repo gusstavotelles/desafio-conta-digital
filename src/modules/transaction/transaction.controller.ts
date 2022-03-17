@@ -5,11 +5,11 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Transaction } from './entities/transaction.entity';
 
 @Controller('transaction')
-@ApiTags('transaction')
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Post()
+  @ApiTags('Create New Transaction')
   @ApiOkResponse({ description: 'Transaction done' })
   async create(@Body() createTransactionDto: CreateTransactionDto) {
     const newTransaction = await this.transactionService.create(
@@ -19,6 +19,7 @@ export class TransactionController {
   }
 
   @Get(':document')
+  @ApiTags('Find Transactions By Account')
   @ApiOkResponse({
     description: 'Get Transactions by Account Successful',
     type: Transaction,

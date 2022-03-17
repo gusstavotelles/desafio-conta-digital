@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AccountService } from '../account/account.service';
@@ -31,6 +31,19 @@ export class TransactionService {
         if (receiver && sender) {
           if (newTransaction.value <= sender.available_value) {
             newTransaction.date_time = moment().format();
+
+            if (await !this.checkDuplicate(newTransaction)) {
+              throw new HttpException(
+                {
+                  sender: sender,
+                  receiver: receiver,
+                  transaction: newTransaction,
+                  message: 'Duplicate Operation, try again in 2 minutes.',
+                },
+                HttpStatus.CONFLICT,
+              );
+            }
+
             const result = await this.transactionRepository.create(
               newTransaction,
             );
@@ -44,18 +57,25 @@ export class TransactionService {
               result.available_value = sender.available_value;
               return result;
             } else {
-              return 'Failed Operation';
+              throw new HttpException(
+                'Failed Operation',
+                HttpStatus.INTERNAL_SERVER_ERROR,
+              );
             }
           } else {
-            return (
+            throw new HttpException(
               newTransaction.value +
-              ' is higher than current available value ($' +
-              sender.available_value +
-              ').'
+                ' is higher than current available value ($' +
+                sender.available_value +
+                ').',
+              HttpStatus.BAD_REQUEST,
             );
           }
         } else {
-          return this.noAccountMessage;
+          throw new HttpException(
+            this.noAccountMessage,
+            HttpStatus.BAD_REQUEST,
+          );
         }
       } catch (err) {
         return err;
@@ -65,5 +85,25 @@ export class TransactionService {
 
   async findByAccount(document: string) {
     return this.transactionRepository.findByAccount(document);
+  }
+
+  private async checkDuplicate(
+    transaction: CreateTransactionDto,
+  ): Promise<boolean> {
+    const trans = await this.transactionRepository.findBySenderAndReceiver(
+      transaction.sender_document,
+      transaction.receiver_document,
+    );
+    let isDuplicate = false;
+    trans?.forEach((tr) => {
+      if (!isDuplicate) {
+        tr.date_time;
+        let transactionDate = moment(tr.date_time);
+        let now = moment();
+        let difference = now.diff(transactionDate, 'minutes');
+        if (difference < 2) isDuplicate = true;
+      }
+    });
+    return isDuplicate;
   }
 }

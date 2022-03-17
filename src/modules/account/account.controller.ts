@@ -3,22 +3,18 @@ import {
   Get,
   Post,
   Body,
-  HttpStatus,
-  Param,
-  Res,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { response } from 'express';
 import { AccountService } from './account.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { Account } from './entities/account.entity';
 
 @Controller('account')
-@ApiTags('account')
 export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   @Post()
+  @ApiTags('Create New Account')
   @ApiOkResponse({ description: 'Account Created' })
   async create(@Body() createAccountDto: CreateAccountDto) {
     const newAccount = await this.accountService.create(createAccountDto);
@@ -26,8 +22,9 @@ export class AccountController {
   }
 
   @Get()
+  @ApiTags('List All Accounts')
   @ApiOkResponse({
-    description: 'Get Accounts SuccessfulAccounts Created',
+    description: 'Get Accounts Successful',
     type: Account,
     isArray: true,
   })
@@ -38,5 +35,4 @@ export class AccountController {
     // });
     return accounts;
   }
-
 }

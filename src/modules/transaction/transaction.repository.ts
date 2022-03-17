@@ -20,4 +20,16 @@ export class TransactionRepository {
       where: [{ sender_document: document }, { receiver_document: document }],
     });
   }
+  
+  findBySenderAndReceiver(
+    sender_document: string,
+    receiver_document: string,
+  ): Promise<Transaction[]> {
+    return this.transactionRepository.find({
+      where: [
+        { sender_document: sender_document },
+        { receiver_document: receiver_document },
+      ],
+    });
+  }
 }
