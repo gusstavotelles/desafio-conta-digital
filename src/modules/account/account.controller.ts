@@ -30,9 +30,6 @@ export class AccountController {
   })
   async findAll() {
     const accounts = await this.accountService.findAll();
-    // return response.status(HttpStatus.OK).json({
-    //   accounts,
-    // });
     return accounts;
   }
 }
