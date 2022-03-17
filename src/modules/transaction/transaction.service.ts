@@ -5,12 +5,14 @@ import { AccountService } from '../account/account.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
 import * as moment from 'moment';
+import { TransactionRepository } from './transaction.repository';
+import { AccountRepository } from '../account/account.repository';
 
 @Injectable()
 export class TransactionService {
   constructor(
-    @InjectRepository(Transaction)
-    private transactionRepository: Repository<Transaction>,
+    private readonly transactionRepository: TransactionRepository,
+    private readonly accountRepository: AccountRepository,
     private readonly accountService: AccountService,
   ) {}
 
@@ -19,39 +21,49 @@ export class TransactionService {
 
   async create(newTransaction: CreateTransactionDto) {
     return this.accountService.findAll().then(async (accounts) => {
-      const sender = accounts.find(
-        (acc) => acc.document == newTransaction.sender_document,
-      );
-      const receiver = accounts.find(
-        (acc) => acc.document == newTransaction.receiver_document,
-      );
-      if (receiver && sender) {
-        if (newTransaction.value <= sender.available_value) {
-          newTransaction.date_time = moment().format();
-          const result = await this.transactionRepository.save(newTransaction);
-          return result;
+      try {
+        const sender = accounts.find(
+          (acc) => acc.document == newTransaction.sender_document,
+        );
+        const receiver = accounts.find(
+          (acc) => acc.document == newTransaction.receiver_document,
+        );
+        if (receiver && sender) {
+          if (newTransaction.value <= sender.available_value) {
+            newTransaction.date_time = moment().format();
+            const result = await this.transactionRepository.create(
+              newTransaction,
+            );
+
+            if (result) {
+              sender.available_value -= newTransaction.value;
+              await this.accountRepository.insertUpdate(sender);
+
+              receiver.available_value += newTransaction.value;
+              await this.accountRepository.insertUpdate(receiver);
+              result.available_value = sender.available_value;
+              return result;
+            } else {
+              return 'Failed Operation';
+            }
+          } else {
+            return (
+              newTransaction.value +
+              ' is higher than current available value ($' +
+              sender.available_value +
+              ').'
+            );
+          }
         } else {
-          return (
-            newTransaction.value +
-            ' is higher than current available value ($' +
-            sender.available_value +
-            ').'
-          );
+          return this.noAccountMessage;
         }
-      } else {
-        return this.noAccountMessage;
+      } catch (err) {
+        return err;
       }
     });
   }
 
-  findAll(): Promise<Transaction[]> {
-    return this.transactionRepository.find();
-  }
-
-  async findOne(sender_document: string) {
-    const transaction = await this.transactionRepository.findOne({
-      where: { email: 'this@mailisnotindatabase.de' },
-    });
-    return this.transactionRepository.findOne(sender_document);
+  async findByAccount(document: string) {
+    return this.transactionRepository.findByAccount(document);
   }
 }

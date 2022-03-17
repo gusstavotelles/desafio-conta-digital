@@ -1,12 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Res,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param } from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -26,26 +18,16 @@ export class TransactionController {
     return newTransaction;
   }
 
-  @Get()
+  @Get(':document')
   @ApiOkResponse({
-    description: 'Accounts Created',
+    description: 'Get Transactions by Account Successful',
     type: Transaction,
     isArray: true,
   })
-  async findAll() {
-    const accounts = await this.transactionService.findAll();
-    // return response.status(HttpStatus.OK).json({
-    //   accounts,
-    // });
-    return accounts;
-  }
-
-  @Get(':sender_document')
-  async findOne(
-    @Res() response,
-    @Param('sender_document') sender_document: string,
-  ): Promise<any> {
-    const transaction = await this.transactionService.findOne(sender_document);
+  async findByAccount(
+    @Param('document') document: string,
+  ): Promise<Transaction[]> {
+    const transaction = await this.transactionService.findByAccount(document);
     return transaction;
   }
 }

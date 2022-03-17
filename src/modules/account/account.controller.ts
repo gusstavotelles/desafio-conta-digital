@@ -39,12 +39,4 @@ export class AccountController {
     return accounts;
   }
 
-  @Get(':document')
-  async findOne(
-    @Res() response,
-    @Param('document') document: string,
-  ): Promise<any> {
-    const account = await this.accountService.findOne(document);
-    return account;
-  }
 }
