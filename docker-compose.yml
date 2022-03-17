@@ -14,7 +14,7 @@ services:
       - ".:/main"
     depends_on:
       - mysql
-  mysql: # Example Service
+  mysql: 
     container_name: desafio-conta-digital_mysql
     restart: always
     image: mysql:5.7
